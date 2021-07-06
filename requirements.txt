@@ -1,4 +1,3 @@
-io
 telegram_bot
 time
 datetime
