@@ -49,7 +49,8 @@ def controller(user_id,name,message):
 
         d,m,y = str(date_string).split("-")
 
-        if(date_format and birthday_of):
+
+        if(date_format and birthday_of and check_for_invalid_birth_date(date_string)):     #checking for incorrect format or misplaced info
             with open("users_data.csv" , "a" , newline='') as csvfile:
                 writer=csv.writer(csvfile)
 
@@ -59,17 +60,20 @@ def controller(user_id,name,message):
                 if (newdate1<newdate2):
                     increment_year = 1
                 else:
+                    if int(y) > int(current_year()):
+                        bot.send_message("invalid birth date \n try again",user_id)
+                        return 0
                     increment_year = 0
 
                 upc_birthday = datetime_ist.strftime("{}-{}".format(str(d+"-"+m),str(int(current_year())+increment_year)))
-                bot.send_message("🅽🅴🆆 🅱🅸🆁🆃🅷🅳🅰🆈 🅰🅳🅳🅴🅳\n\nName: {}\nBirth_date: {}\n\nFrom.\nuser id: {}\nuser name: {}".format(birthday_of,date_string,user_id,name),admin_id)
-                bot.send_message("🅽🅴🆆 🅱🅸🆁🆃🅷🅳🅰🆈 🅰🅳🅳🅴🅳\n\nName: {}\nBirth_date: {}".format(birthday_of,date_string),user_id)
+                bot.send_message("🅽🅴🆆 🅱🅸🆁🆃🅷🅳🅰🆈 🅰🅳🅳🅴🅳\n\nName: {}\nBirth_date: {}\nUpcoming birthday: {}\n\nFrom.\nuser id: {}\nuser name: {}".format(birthday_of,date_string,upc_birthday,user_id,name),admin_id)
+                bot.send_message("🅽🅴🆆 🅱🅸🆁🆃🅷🅳🅰🆈 🅰🅳🅳🅴🅳\n\nName: {}\nBirth_date: {}\nUpcoming birthday: {}".format(birthday_of,date_string,upc_birthday),user_id)
                 writer.writerow([user_id,name,date_string,birthday_of,upc_birthday]) 
                 csvfile.close()
         else:
-            bot.send_message("incorrect format",user_id)
+            bot.send_message("incorrect format or invalid birth date",user_id)
     elif "/help" == message:
-        bot.send_message("User operations :\n----------\n1./get_my_data\n2./birthdays_this_month\n3./upcoming_birthday\n3./time \n----------",user_id)
+        bot.send_message("User operations :\n----------\n1./get_my_data\n2./birthdays_this_month\n3./upcoming_birthday\n3./time\n4./report_bug\n----------",user_id)
     elif "/time" == message:
         IST = pytz.timezone('Asia/Kolkata')
         datetime_ist = datetime.now(IST)
@@ -80,7 +84,15 @@ def controller(user_id,name,message):
         birthdays_this_month(user_id)
     elif "/upcoming_birthday" == message:
         upcoming_birthday(user_id)
+    elif "/report_bug" == message:
+        bot.send_message("Use following method:\n\nsyntax : bug=bug_discription\nEx : bug=there is a bug related to birth date",user_id)
+    elif "bug=" in message:
+        bot.send_message("bug recorded",user_id)
+        bot.send_message("Thank you for your support",user_id)
 
+        message = message.replace("bug=","")
+        bot.send_message(f"Hey , vishal kamble \nI am {name} recently i found a bug in your system , bug description as below \n\nBug: {message}",admin_id)
+    
     # admin control panel
     elif user_id == admin_id:
         if "/admin_help" in message:
@@ -92,6 +104,17 @@ def controller(user_id,name,message):
             
     else:
         bot.send_message("sorry , i could'nt understand !",user_id)
+
+
+def check_for_invalid_birth_date(date):
+    newdate1 = time.strptime(date, "%d-%m-%Y")
+    newdate2 = time.strptime(todays_date(), "%d-%m-%Y")
+
+    if (newdate1<newdate2):
+        return 1
+    else:
+        return 0
+
 
 def birthdays_this_month(user_id):
     write_index = []
